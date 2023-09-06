@@ -1,0 +1,45 @@
+import requests
+import time
+
+ETHERSCAN_API_URL = "https://api.etherscan.io/api"
+ETHERSCAN_API_KEY = "YOUR_ETHERSCAN_API_KEY"  # Etherscan'dan almanız gereken API anahtarı
+TARGET_CODE = """
+function BBC_h
+"""
+
+def get_all_contracts(page=1):
+    params = {
+        "module": "contract",
+        "action": "getsourcecode",
+        "apikey": ETHERSCAN_API_KEY,
+        "page": page,
+        "offset": 100,  # Her seferinde 100 kontrat getir. Bu değeri değiştirebilirsiniz.
+    }
+    response = requests.get(ETHERSCAN_API_URL, params=params)
+    if response.status_code == 200:
+        return response.json()["result"]
+    return []
+
+def main():
+    page = 1
+    matching_addresses = []
+
+    while True:
+        print(f"Page {page} scanning...")
+        contracts = get_all_contracts(page)
+        if not contracts:
+            break
+
+        for contract in contracts:
+            if TARGET_CODE in contract["SourceCode"]:
+                matching_addresses.append(contract["ContractAddress"])
+
+        page += 1
+        time.sleep(1)  # Etherscan'ın sınırlamalarına takılmamak için her istekten sonra kısa bir bekleme
+
+    print("Matching contract addresses:")
+    for address in matching_addresses:
+        print(address)
+
+if __name__ == "__main__":
+    main()
